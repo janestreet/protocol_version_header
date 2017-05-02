@@ -1,0 +1,7 @@
+(library
+ ((name protocol_version_header)
+  (public_name protocol_version_header)
+  (libraries (core_kernel))
+  (preprocess (pps (ppx_jane ppx_driver.runner)))))
+
+(jbuild_version 1)
