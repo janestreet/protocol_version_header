@@ -6,7 +6,7 @@ bug-reports: "https://github.com/janestreet/protocol_version_header/issues"
 dev-repo: "git+https://github.com/janestreet/protocol_version_header.git"
 license: "Apache-2.0"
 build: [
-  ["jbuilder" "build" "--only-packages" "protocol_version_header" "--root" "." "-j" jobs "@install"]
+  ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 depends: [
   "core_kernel"
