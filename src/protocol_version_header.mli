@@ -20,3 +20,6 @@ val negotiate : allow_legacy_peer:bool -> us:t -> peer:t -> int Or_error.t
 (** [contains_magic_prefix] reads a bin_protted value of type [t] and returns a boolean
     saying whether this magic number was observed. *)
 val contains_magic_prefix : protocol:Known_protocol.t -> bool Bin_prot.Type_class.reader
+
+(** [any_magic_prefix] reads the magic number for one of the known protocols. *)
+val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader

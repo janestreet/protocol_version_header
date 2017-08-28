@@ -70,8 +70,18 @@ let negotiate ~allow_legacy_peer ~us ~peer =
   end
 ;;
 
-let contains_magic_prefix ~protocol =
+let matches_magic_prefix t ~protocol =
   let magic_number = Known_protocol.magic_number protocol in
-  let contains_magic t = List.mem ~equal:Int.equal t magic_number in
-  Bin_prot.Type_class.cnv_reader contains_magic bin_t.reader
+  List.mem ~equal:Int.equal t magic_number
+;;
+
+let contains_magic_prefix ~protocol =
+  Bin_prot.Type_class.cnv_reader (matches_magic_prefix ~protocol) bin_t.reader
+;;
+
+let any_magic_prefix =
+  let f t =
+    List.find Known_protocol.all ~f:(fun protocol -> matches_magic_prefix ~protocol t)
+  in
+  Bin_prot.Type_class.cnv_reader f bin_t.reader
 ;;
