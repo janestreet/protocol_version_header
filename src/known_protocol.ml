@@ -36,7 +36,7 @@ let%test_unit "validate magic words" =
   (* Magic numbers must fit into Ocaml integers (31 bits on 32 bit builds). *)
   assert (List.for_all magic_numbers ~f:(fun n -> n <= Int.of_float ((2. ** 30.) -. 1.)));
   (* No duplicate magic numbers *)
-  assert (not (List.contains_dup magic_numbers))
+  assert (not (List.contains_dup magic_numbers ~compare:Int.compare))
 ;;
 
 (* Ensure tests break if the magic numbers are changed *)
