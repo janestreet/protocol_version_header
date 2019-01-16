@@ -7,27 +7,27 @@ let create ~protocol ~supported_versions =
 ;;
 
 let get_protocol t =
-  let (protocols, versions) =
+  let protocols, versions =
     List.partition_map t ~f:(fun v ->
       match Map.find Known_protocol.by_magic_number v with
       | Some p -> `Fst p
       | None -> `Snd v)
   in
   match protocols with
-  | []  -> Ok (None,   Int.Set.of_list versions)
-  | [p] -> Ok (Some p, Int.Set.of_list versions)
-  | _   ->
-    Or_error.error_s [%message
-      "[Protocol_version_header.negotiate]: multiple magic numbers seen."
-        (protocols : Known_protocol.t list)
-        (versions  : int list)
-    ]
+  | [] -> Ok (None, Int.Set.of_list versions)
+  | [ p ] -> Ok (Some p, Int.Set.of_list versions)
+  | _ ->
+    Or_error.error_s
+      [%message
+        "[Protocol_version_header.negotiate]: multiple magic numbers seen."
+          (protocols : Known_protocol.t list)
+          (versions : int list)]
 ;;
 
 let negotiate ~allow_legacy_peer ~us ~peer =
   let open Or_error.Let_syntax in
-  let%bind (us_protocol,   us_versions)   = get_protocol us   in
-  let%bind (peer_protocol, peer_versions) = get_protocol peer in
+  let%bind us_protocol, us_versions = get_protocol us in
+  let%bind peer_protocol, peer_versions = get_protocol peer in
   let%bind us_protocol =
     match us_protocol with
     | Some x -> return x
@@ -40,34 +40,32 @@ let negotiate ~allow_legacy_peer ~us ~peer =
       (* we assume peer is speaking our protocol if [allow_legacy_peer] *)
       if allow_legacy_peer
       then return us_protocol
-      else begin
+      else (
         let peer_protocol = `Unknown in
-        Or_error.error_s [%message
-          "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
-            (us_protocol : Known_protocol.t)
-            (peer_protocol : [`Unknown])
-        ]
-      end
+        Or_error.error_s
+          [%message
+            "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
+              (us_protocol : Known_protocol.t)
+              (peer_protocol : [`Unknown])])
   in
-  if not ([%compare.equal: Known_protocol.t] us_protocol peer_protocol) then begin
-    Or_error.error_s [%message
-      "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
-        (us_protocol   : Known_protocol.t)
-        (peer_protocol : Known_protocol.t)
-    ]
-  end
-  else begin
+  if not ([%compare.equal: Known_protocol.t] us_protocol peer_protocol)
+  then
+    Or_error.error_s
+      [%message
+        "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
+          (us_protocol : Known_protocol.t)
+          (peer_protocol : Known_protocol.t)]
+  else (
     let protocol = us_protocol in
     match Set.max_elt (Set.inter us_versions peer_versions) with
     | Some version -> Ok version
     | None ->
-      Or_error.error_s [%message
-        "[Protocol_version_header.negotiate]: no shared version numbers"
-          (us_versions   : Int.Set.t)
-          (peer_versions : Int.Set.t)
-          (protocol : Known_protocol.t)
-      ]
-  end
+      Or_error.error_s
+        [%message
+          "[Protocol_version_header.negotiate]: no shared version numbers"
+            (us_versions : Int.Set.t)
+            (peer_versions : Int.Set.t)
+            (protocol : Known_protocol.t)])
 ;;
 
 let matches_magic_prefix t ~protocol =

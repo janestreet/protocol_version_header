@@ -7,5 +7,4 @@ type t =
 [@@deriving compare, enumerate, sexp]
 
 val magic_number : t -> int
-
 val by_magic_number : t Int.Map.t
