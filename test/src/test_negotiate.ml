@@ -1,6 +1,5 @@
-open! Core
-open Async
-open Expect_test_helpers
+open! Core_kernel
+open Expect_test_helpers_kernel
 open Protocol_version_header
 
 module Legacy = struct
@@ -26,48 +25,39 @@ let test_legacy ~allow_legacy_peer ~us:(p_us, v_us) ~peer =
 
 let%expect_test _ =
   test ~us:(Krb, [ 1 ]) ~peer:(Krb, [ 1 ]);
-  let%bind () = [%expect {| (Ok 1) |}] in
+  let () = [%expect {| (Ok 1) |}] in
   test ~us:(Krb, [ 1 ]) ~peer:(Krb, [ 2 ]);
-  let%bind () =
-    [%expect
-      {|
+  [%expect
+    {|
       (Error (
         "[Protocol_version_header.negotiate]: no shared version numbers"
         (us_versions   (1))
         (peer_versions (2))
         (protocol Krb)))
-    |}]
-  in
+    |}];
   test ~us:(Krb, [ 1 ]) ~peer:(Rpc, [ 1 ]);
-  let%bind () =
-    [%expect
-      {|
+  [%expect
+    {|
       (Error (
         "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
         (us_protocol   Krb)
-        (peer_protocol Rpc))) |}]
-  in
+        (peer_protocol Rpc))) |}];
   test_legacy ~allow_legacy_peer:false ~us:(Krb, [ 1; 2 ]) ~peer:[ 1 ];
-  let%bind () =
-    [%expect
-      {|
+  [%expect
+    {|
       (Error (
         "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
         (us_protocol   Krb)
-        (peer_protocol Unknown))) |}]
-  in
+        (peer_protocol Unknown))) |}];
   test_legacy ~allow_legacy_peer:true ~us:(Krb, [ 1; 2 ]) ~peer:[ 1 ];
-  let%bind () = [%expect {| (Ok 1) |}] in
+  [%expect {| (Ok 1) |}];
   test_legacy ~allow_legacy_peer:true ~us:(Krb, [ 2 ]) ~peer:[ 1 ];
-  let%bind () =
-    [%expect
-      {|
+  [%expect
+    {|
       (Error (
         "[Protocol_version_header.negotiate]: no shared version numbers"
         (us_versions   (2))
         (peer_versions (1))
         (protocol Krb)))
     |}]
-  in
-  return ()
 ;;
