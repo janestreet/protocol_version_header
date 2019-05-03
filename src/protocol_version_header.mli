@@ -8,7 +8,9 @@ open! Core_kernel
 
 type t [@@deriving bin_io, sexp]
 
-val create : protocol:Known_protocol.t -> supported_versions:int list -> t
+(** [create_exn ~protocol ~supported_version] raises if
+    [List.length supported_versions >= 100] *)
+val create_exn : protocol:Known_protocol.t -> supported_versions:int list -> t
 
 (** [negotiate ~allow_legacy_peer ~us ~peer] inspects the magic numbers of [us] and
     [peer]. If the magic numbers match, the highest shared version number is returned.
@@ -23,3 +25,7 @@ val contains_magic_prefix : protocol:Known_protocol.t -> bool Bin_prot.Type_clas
 
 (** [any_magic_prefix] reads the magic number for one of the known protocols. *)
 val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader
+
+module For_test : sig
+  module Make_list_with_max_len (Config : List_with_max_len.Config) : List_with_max_len.S
+end
