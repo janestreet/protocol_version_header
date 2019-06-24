@@ -56,7 +56,7 @@ let negotiate ~allow_legacy_peer ~(us : t) ~(peer : t) =
           [%message
             "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
               (us_protocol : Known_protocol.t)
-              (peer_protocol : [`Unknown])])
+              (peer_protocol : [ `Unknown ])])
   in
   if not ([%compare.equal: Known_protocol.t] us_protocol peer_protocol)
   then
