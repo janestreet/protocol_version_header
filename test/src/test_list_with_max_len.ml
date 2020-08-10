@@ -20,8 +20,8 @@ let round_trips ~here lst =
 ;;
 
 let%expect_test "we can read regular lists sent over the wire and fail when we are \
-                 supposed to. The behavior is necessary in case someone sends garbage \
-                 on the wire."
+                 supposed to. The behavior is necessary in case someone sends garbage on \
+                 the wire."
   =
   round_trips ~here:[%here] [];
   round_trips ~here:[%here] [ 1 ];
