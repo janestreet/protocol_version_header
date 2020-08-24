@@ -28,4 +28,5 @@ val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader
 
 module For_test : sig
   module Make_list_with_max_len (Config : List_with_max_len.Config) : List_with_max_len.S
+  module Known_protocol = Known_protocol
 end

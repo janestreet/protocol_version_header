@@ -96,4 +96,5 @@ let any_magic_prefix =
 
 module For_test = struct
   module Make_list_with_max_len = List_with_max_len.Make
+  module Known_protocol = Known_protocol
 end
