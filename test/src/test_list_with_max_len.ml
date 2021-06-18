@@ -1,4 +1,4 @@
-open! Core_kernel
+open! Core
 
 module List_with_max_len_one =
   Protocol_version_header.For_test.Make_list_with_max_len (struct
