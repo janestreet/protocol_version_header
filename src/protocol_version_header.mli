@@ -4,13 +4,29 @@ open! Core
 (** This library offers a lightweight way for applications protocols to version
     themselves. The more protocols that add themselves to [Known_protocol], the nicer
     error messages we will get when connecting to a service while using the wrong
-    protocol. *)
+    protocol.
+
+    The library also offers a mechanism for some data to be shared in the connection
+    header. A header can contain [additional_magic_numbers] that are not used in the
+    version negotiation but can be used in some way by the peer (e.g. the kerberos rpc
+    library could use this to indicate whether the server is doing any form of
+    authorization).
+*)
 
 type t [@@deriving bin_io, sexp]
 
-(** [create_exn ~protocol ~supported_version] raises if
-    [List.length supported_versions >= 100] *)
-val create_exn : protocol:Known_protocol.t -> supported_versions:int list -> t
+(** [create_exn] raises if one of the following is true:
+    - [List.length supported_versions + List.length additional_magic_numbers >= 100]
+    - [supported_versions] containing version number greater than [max_supported_version]
+    - [additional_magic_numbers] containing version numbers not greater than
+      [max_supported_version]
+    - [additional_magic_numbers] overlaps with potential magic values for [protocol]s. *)
+val create_exn
+  :  ?additional_magic_numbers:int list
+  -> protocol:Known_protocol.t
+  -> supported_versions:int list
+  -> unit
+  -> t
 
 (** [negotiate ~allow_legacy_peer ~us ~peer] inspects the magic numbers of [us] and
     [peer]. If the magic numbers match, the highest shared version number is returned.
@@ -46,6 +62,19 @@ val any_magic_prefix_from_six_bytes_bin_size : int
 
 module Known_protocol = Known_protocol
 
+module Expert : sig
+  (** Gets the raw list of version numbers contained in the header. *)
+  val raw_version_list : t -> int list
+end
+
 module For_test : sig
   module Make_list_with_max_len (Config : List_with_max_len.Config) : List_with_max_len.S
+
+  (** The number of bytes in the bin_io representation of a magic number. All magic
+      numbers are represented in this fixed number of bytes. *)
+  val magic_number_bin_size : int
+
+  (** Max version that's possible to be supported ever. Any numbers bigger than this are
+      considered metadata that's shared in the header. *)
+  val max_supported_version : int
 end

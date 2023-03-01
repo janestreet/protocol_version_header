@@ -12,8 +12,6 @@ let magic_word = function
   | Rpc -> "RPC"
 ;;
 
-let magic_number_bin_size = 5
-
 let gen_magic_number word =
   String.to_list_rev word
   |> List.fold ~init:0 ~f:(fun acc c -> (acc * 256) + Char.to_int c)
@@ -26,15 +24,6 @@ let by_magic_number = Int.Map.of_alist_exn (List.map all ~f:(fun p -> magic_numb
    negotiation.  Let's be careful that we don't reuse the old magic number *)
 let retired_krb_word = "KRB"
 
-let%test_unit "validate magic words" =
-  let magic_words = retired_krb_word :: List.map all ~f:magic_word in
-  let magic_numbers = List.map magic_words ~f:gen_magic_number in
-  (* Magic numbers must fit into Ocaml integers (31 bits on 32 bit builds). *)
-  assert (List.for_all magic_numbers ~f:(fun n -> n <= Int.of_float ((2. ** 30.) -. 1.)));
-  (* No duplicate magic numbers *)
-  assert (not (List.contains_dup magic_numbers ~compare:Int.compare))
-;;
-
 (* Ensure tests break if the magic numbers are changed *)
 let%test_unit "magic numbers" =
   assert (gen_magic_number retired_krb_word = 4_346_443);
@@ -43,9 +32,8 @@ let%test_unit "magic numbers" =
   assert (magic_number Rpc = 4_411_474)
 ;;
 
-let%test_unit "magic_number_bin_size is correct" =
-  List.iter all ~f:(fun t ->
-    let magic_number = magic_number t in
-    let size = Int.bin_size_t magic_number in
-    [%test_eq: int] size magic_number_bin_size)
-;;
+module For_test = struct
+  let all_magic_numbers_including_retired =
+    lazy (retired_krb_word :: List.map all ~f:magic_word |> List.map ~f:gen_magic_number)
+  ;;
+end

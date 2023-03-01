@@ -1,3 +1,4 @@
 (library (name protocol_version_header_test)
- (libraries core expect_test_helpers_core protocol_version_header)
+ (libraries core expect_test_helpers_core krb_authorization_method
+  protocol_version_header)
  (preprocess (pps ppx_jane)))

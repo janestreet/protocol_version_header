@@ -1,6 +1,9 @@
 open! Core
 module Known_protocol = Known_protocol
 
+let max_supported_version = 1_000_000
+let outside_max_supported_version_range num = num > max_supported_version
+
 module Bounded_list_in_case_someone_sends_garbage_on_the_wire =
   List_with_max_len.Make (struct
     let max_len = 100
@@ -10,19 +13,48 @@ module Bounded_list_in_case_someone_sends_garbage_on_the_wire =
 type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
 [@@deriving bin_io, sexp]
 
-let create_exn ~protocol ~supported_versions =
-  Known_protocol.magic_number protocol :: supported_versions
+let known_protocol_magic_numbers = lazy (Map.key_set Known_protocol.by_magic_number)
+
+let create_exn ?(additional_magic_numbers = []) ~protocol ~supported_versions () =
+  let protocol_magic_number = Known_protocol.magic_number protocol in
+  if List.exists supported_versions ~f:outside_max_supported_version_range
+  then
+    raise_s
+      [%message
+        "Unable to advertise versions larger than max supported version"
+          (max_supported_version : int)
+          (supported_versions : int list)];
+  if List.exists additional_magic_numbers ~f:(Fn.non outside_max_supported_version_range)
+  then
+    raise_s
+      [%message
+        "[additional_magic_numbers] shouldn't be within [max_supported_version] range"
+          (max_supported_version : int)
+          (additional_magic_numbers : int list)];
+  if List.exists
+       additional_magic_numbers
+       ~f:(Set.mem (force known_protocol_magic_numbers))
+  then
+    raise_s
+      [%message
+        "[additional_magic_numbers] shouldn't be overlapping with potential \
+         [protocol_magic_number]s"
+          (additional_magic_numbers : int list)
+          ~known_protocol_magic_numbers:(force known_protocol_magic_numbers : Int.Set.t)];
+  protocol_magic_number :: (additional_magic_numbers @ supported_versions)
   |> Bounded_list_in_case_someone_sends_garbage_on_the_wire.of_list_exn
 ;;
 
+let raw_version_list (t : t) = (t :> int list)
+
 let get_protocol (t : t) =
-  let protocols, versions =
-    List.partition_map
+  let protocols, versions, _additional_magic_numbers =
+    List.partition3_map
       (t :> int list)
       ~f:(fun v ->
         match Map.find Known_protocol.by_magic_number v with
-        | Some p -> First p
-        | None -> Second v)
+        | Some p -> `Fst p
+        | None -> if outside_max_supported_version_range v then `Trd v else `Snd v)
   in
   match protocols with
   | [] -> Ok (None, Int.Set.of_list versions)
@@ -81,7 +113,7 @@ let negotiate ~allow_legacy_peer ~(us : t) ~(peer : t) =
 
 let matches_magic_prefix (t : t) ~protocol =
   let magic_number = Known_protocol.magic_number protocol in
-  List.mem ~equal:Int.equal (t :> int list) magic_number
+  List.mem ~equal:Int.equal (raw_version_list t) magic_number
 ;;
 
 let contains_magic_prefix ~protocol =
@@ -94,6 +126,8 @@ let any_magic_prefix =
   in
   Bin_prot.Type_class.cnv_reader f bin_t.reader
 ;;
+
+let magic_number_bin_size = 5
 
 module Magic_prefix_bin_repr = struct
   type t = int [@@deriving bin_shape, bin_write]
@@ -109,7 +143,7 @@ module Magic_prefix_bin_repr = struct
      tests to make sure we never change them). *)
   let bin_size =
     bin_size_t Bounded_list_in_case_someone_sends_garbage_on_the_wire.max_len
-    + Known_protocol.magic_number_bin_size
+    + magic_number_bin_size
   ;;
 
   let bin_read_t buf ~pos_ref =
@@ -130,8 +164,15 @@ let any_magic_prefix_from_six_bytes =
 
 let any_magic_prefix_from_six_bytes_bin_size = Magic_prefix_bin_repr.bin_size
 
+module Expert = struct
+  let raw_version_list = raw_version_list
+end
+
 module For_test = struct
   module Make_list_with_max_len = List_with_max_len.Make
+
+  let magic_number_bin_size = magic_number_bin_size
+  let max_supported_version = max_supported_version
 end
 
 let%test_unit "bin sizes are not changed by accident" =
@@ -143,8 +184,8 @@ let%test_unit "bin sizes are not changed by accident" =
     Int.bin_size_t Bounded_list_in_case_someone_sends_garbage_on_the_wire.max_len
   in
   assert (bounded_list_bin_size = 1);
-  assert (6 = Known_protocol.magic_number_bin_size + bounded_list_bin_size);
+  assert (6 = magic_number_bin_size + bounded_list_bin_size);
   assert (
     any_magic_prefix_from_six_bytes_bin_size
-    = Known_protocol.magic_number_bin_size + bounded_list_bin_size)
+    = magic_number_bin_size + bounded_list_bin_size)
 ;;

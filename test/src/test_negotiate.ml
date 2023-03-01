@@ -7,14 +7,14 @@ module Legacy = struct
 end
 
 let test ~us:(p_us, v_us) ~peer:(p_peer, v_peer) =
-  let us = create_exn ~protocol:p_us ~supported_versions:v_us in
-  let peer = create_exn ~protocol:p_peer ~supported_versions:v_peer in
+  let us = create_exn () ~protocol:p_us ~supported_versions:v_us in
+  let peer = create_exn () ~protocol:p_peer ~supported_versions:v_peer in
   let result = negotiate ~allow_legacy_peer:false ~us ~peer in
   print_s [%message "" ~_:(result : int Or_error.t)]
 ;;
 
 let test_legacy ~allow_legacy_peer ~us:(p_us, v_us) ~peer =
-  let us = create_exn ~protocol:p_us ~supported_versions:v_us in
+  let us = create_exn () ~protocol:p_us ~supported_versions:v_us in
   let peer =
     let str = Binable.to_string (module Legacy) peer in
     Binable.of_string (module Protocol_version_header) str
