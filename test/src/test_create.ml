@@ -27,10 +27,7 @@ let%expect_test "test create results and also document the scenario where [creat
   [%expect {| (4411474 1000000) |}];
   (* Supported version over the max supported version limit *)
   require_does_raise [%here] (fun () ->
-    create_exn
-      ()
-      ~protocol:Krb
-      ~supported_versions:[ For_test.max_supported_version + 1 ]);
+    create_exn () ~protocol:Krb ~supported_versions:[ For_test.max_supported_version + 1 ]);
   [%expect
     {|
     ("Unable to advertise versions larger than max supported version"
