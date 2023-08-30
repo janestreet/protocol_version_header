@@ -1,9 +1,9 @@
 open! Core
 
 let read
-      info
-      buf
-      (reader : Protocol_version_header.Known_protocol.t option Bin_prot.Type_class.reader)
+  info
+  buf
+  (reader : Protocol_version_header.Known_protocol.t option Bin_prot.Type_class.reader)
   =
   let pos_ref = ref 0 in
   match reader.read buf ~pos_ref with

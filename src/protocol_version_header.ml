@@ -5,10 +5,10 @@ let max_supported_version = 1_000_000
 let outside_max_supported_version_range num = num > max_supported_version
 
 module Bounded_list_in_case_someone_sends_garbage_on_the_wire =
-  List_with_max_len.Make (struct
-    let max_len = 100
-    let context = Info.of_string "Protocol_version_header"
-  end)
+List_with_max_len.Make (struct
+  let max_len = 100
+  let context = Info.of_string "Protocol_version_header"
+end)
 
 type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
 [@@deriving bin_io, sexp]
