@@ -7,7 +7,7 @@ let magic_numbers =
 ;;
 
 let%test_unit "validate magic numbers" =
-  (* Magic numbers must fit into Ocaml integers (31 bits on 32 bit builds). *)
+  (* Magic numbers must fit into OCaml integers (31 bits on 32 bit builds). *)
   assert (List.for_all magic_numbers ~f:(fun n -> n <= Int.of_float ((2. ** 30.) -. 1.)));
   (* Magic numbers are not too small, so it doesn't clash with potential protocol
      version numbers. *)
