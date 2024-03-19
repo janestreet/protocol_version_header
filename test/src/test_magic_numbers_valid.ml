@@ -31,5 +31,6 @@ let%expect_test "show the value of our magic numbers" =
     5521995
     4411474
     43244093
-    43437982 |}]
+    43437982
+    |}]
 ;;

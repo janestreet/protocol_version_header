@@ -30,7 +30,8 @@ let%expect_test "we can read regular lists sent over the wire and fail when we a
     print_s [%message (exn : Exn.t)];
     [%expect
       {|
-          (exn
-           (exn.ml.Reraised Context
-            (common.ml.Read_error "List_too_long / 2 (max 1)" 1)))|}]
+      (exn
+       (exn.ml.Reraised Context
+        (common.ml.Read_error "List_too_long / 2 (max 1)" 1)))
+      |}]
 ;;

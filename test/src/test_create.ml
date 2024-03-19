@@ -21,7 +21,8 @@ let%expect_test "test create results and also document the scenario where [creat
     ("List is too large"
       (context Protocol_version_header)
       (len     101)
-      (max_len 100)) |}];
+      (max_len 100))
+    |}];
   (* Supported version at the max supported version limit *)
   test ~supported_versions:[ For_test.max_supported_version ];
   [%expect {| (4411474 1000000) |}];
@@ -32,7 +33,8 @@ let%expect_test "test create results and also document the scenario where [creat
     {|
     ("Unable to advertise versions larger than max supported version"
      (max_supported_version 1000000)
-     (supported_versions (1000001))) |}];
+     (supported_versions (1000001)))
+    |}];
   (* [additional_magic_numbers] smaller than or equal to max supported version *)
   require_does_raise [%here] (fun () ->
     create_exn () ~protocol:Krb ~additional_magic_numbers:[ 1 ] ~supported_versions:[]);
@@ -40,7 +42,8 @@ let%expect_test "test create results and also document the scenario where [creat
     {|
     ("[additional_magic_numbers] shouldn't be within [max_supported_version] range"
      (max_supported_version 1000000)
-     (additional_magic_numbers (1))) |}];
+     (additional_magic_numbers (1)))
+    |}];
   require_does_raise [%here] (fun () ->
     create_exn
       ()
@@ -51,7 +54,8 @@ let%expect_test "test create results and also document the scenario where [creat
     {|
     ("[additional_magic_numbers] shouldn't be within [max_supported_version] range"
      (max_supported_version 1000000)
-     (additional_magic_numbers (1000000))) |}];
+     (additional_magic_numbers (1000000)))
+    |}];
   (* [additional_magic_numbers] clashing with known protocols *)
   require_does_raise [%here] (fun () ->
     create_exn
@@ -63,5 +67,6 @@ let%expect_test "test create results and also document the scenario where [creat
     {|
     ("[additional_magic_numbers] shouldn't be overlapping with potential [protocol_magic_number]s"
      (additional_magic_numbers (4411474))
-     (known_protocol_magic_numbers (4411474 5521995 843207243))) |}]
+     (known_protocol_magic_numbers (4411474 5521995 843207243)))
+    |}]
 ;;

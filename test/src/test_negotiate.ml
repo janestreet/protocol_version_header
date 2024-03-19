@@ -29,29 +29,30 @@ let%expect_test _ =
   test ~us:(Krb, [ 1 ]) ~peer:(Krb, [ 2 ]);
   [%expect
     {|
-      (Error (
-        "[Protocol_version_header.negotiate]: no shared version numbers"
-        (us_versions   (1))
-        (peer_versions (2))
-        (protocol Krb)))
+    (Error (
+      "[Protocol_version_header.negotiate]: no shared version numbers"
+      (us_versions   (1))
+      (peer_versions (2))
+      (protocol Krb)))
     |}];
   test ~us:(Krb, [ 1 ]) ~peer:(Rpc, [ 1 ]);
   [%expect
     {|
-      (Error (
-        "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
-        (us_protocol   Krb)
-        (peer_protocol Rpc))) |}];
+    (Error (
+      "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
+      (us_protocol   Krb)
+      (peer_protocol Rpc)))
+    |}];
   test_legacy ~allow_legacy_peer:false ~us:(Krb, [ 1; 2 ]) ~peer:[ 1 ];
   [%expect
     {|
     (Error (
       "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
       (us_protocol   Krb)
-      (peer_protocol Unknown))) |}];
+      (peer_protocol Unknown)))
+    |}];
   test_legacy ~allow_legacy_peer:true ~us:(Krb, [ 1; 2 ]) ~peer:[ 1 ];
-  [%expect {|
-    (Ok 1) |}];
+  [%expect {| (Ok 1) |}];
   test_legacy ~allow_legacy_peer:true ~us:(Krb, [ 2 ]) ~peer:[ 1 ];
   [%expect
     {|
@@ -59,5 +60,6 @@ let%expect_test _ =
       "[Protocol_version_header.negotiate]: no shared version numbers"
       (us_versions   (2))
       (peer_versions (1))
-      (protocol Krb))) |}]
+      (protocol Krb)))
+    |}]
 ;;

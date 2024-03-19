@@ -10,8 +10,10 @@ List_with_max_len.Make (struct
   let context = Info.of_string "Protocol_version_header"
 end)
 
-type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
-[@@deriving bin_io, sexp]
+include struct
+  type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
+  [@@deriving bin_io, sexp]
+end
 
 let known_protocol_magic_numbers = lazy (Map.key_set Known_protocol.by_magic_number)
 
@@ -164,8 +166,22 @@ let any_magic_prefix_from_six_bytes =
 
 let any_magic_prefix_from_six_bytes_bin_size = Magic_prefix_bin_repr.bin_size
 
+module Pair = struct
+  type nonrec t =
+    { us : t
+    ; peer : t
+    }
+end
+
 module Expert = struct
   let raw_version_list = raw_version_list
+  let none = Bounded_list_in_case_someone_sends_garbage_on_the_wire.of_list_exn []
+
+  let is_none (t : t) =
+    match (t :> int list) with
+    | [] -> true
+    | _ :: _ -> false
+  ;;
 end
 
 module For_test = struct

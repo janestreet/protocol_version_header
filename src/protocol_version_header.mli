@@ -61,9 +61,21 @@ val any_magic_prefix_from_six_bytes_bin_size : int
 
 module Known_protocol = Known_protocol
 
+(** This is useful for passing around a pair of [t]s that will eventually be passed to
+    [negotiate]. *)
+module Pair : sig
+  type nonrec t =
+    { us : t
+    ; peer : t
+    }
+end
+
 module Expert : sig
   (** Gets the raw list of version numbers contained in the header. *)
   val raw_version_list : t -> int list
+
+  val none : t
+  val is_none : t -> bool
 end
 
 module For_test : sig
