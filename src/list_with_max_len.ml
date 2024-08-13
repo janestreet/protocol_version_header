@@ -2,9 +2,10 @@ open! Core
 include List_with_max_len_intf
 
 module Make (Config : Config) = struct
+  open Stable_witness.Export
   include Config
 
-  type 'a t = 'a list [@@deriving bin_shape, bin_write]
+  type 'a t = 'a list [@@deriving bin_shape, bin_write, stable_witness]
 
   let __bin_read_t__ = List.__bin_read_t__
 

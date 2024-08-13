@@ -23,6 +23,30 @@ let test_legacy ~allow_legacy_peer ~us:(p_us, v_us) ~peer =
   print_s [%message "" ~_:(result : int Or_error.t)]
 ;;
 
+let%expect_test "We have a bad header" =
+  let peer = create_exn ~protocol:Krb ~supported_versions:[ 1 ] () in
+  let us =
+    let str = Binable.to_string (module Legacy) [ 1 ] in
+    Binable.of_string (module Protocol_version_header) str
+  in
+  let result = negotiate ~allow_legacy_peer:false ~us ~peer in
+  print_s [%message "" ~_:(result : int Or_error.t)];
+  [%expect
+    {|
+    (Error (
+      "[Protocol_version_header.negotiate]: Could not determine our own protocol"
+      (us_versions (1))))
+    |}];
+  let result = negotiate ~allow_legacy_peer:true ~us ~peer in
+  print_s [%message "" ~_:(result : int Or_error.t)];
+  [%expect
+    {|
+    (Error (
+      "[Protocol_version_header.negotiate]: Could not determine our own protocol"
+      (us_versions (1))))
+    |}]
+;;
+
 let%expect_test _ =
   test ~us:(Krb, [ 1 ]) ~peer:(Krb, [ 1 ]);
   let () = [%expect {| (Ok 1) |}] in
@@ -30,7 +54,7 @@ let%expect_test _ =
   [%expect
     {|
     (Error (
-      "[Protocol_version_header.negotiate]: no shared version numbers"
+      "[Protocol_version_header.negotiate]: Peer and us share no compatible versions"
       (us_versions   (1))
       (peer_versions (2))
       (protocol Krb)))
@@ -39,7 +63,7 @@ let%expect_test _ =
   [%expect
     {|
     (Error (
-      "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
+      "[Protocol_version_header.negotiate]: Peer is using a different protocol from us"
       (us_protocol   Krb)
       (peer_protocol Rpc)))
     |}];
@@ -47,7 +71,7 @@ let%expect_test _ =
   [%expect
     {|
     (Error (
-      "[Protocol_version_header.negotiate]: conflicting magic protocol numbers"
+      "[Protocol_version_header.negotiate]: Could not determine peer's protocol"
       (us_protocol   Krb)
       (peer_protocol Unknown)))
     |}];
@@ -57,7 +81,7 @@ let%expect_test _ =
   [%expect
     {|
     (Error (
-      "[Protocol_version_header.negotiate]: no shared version numbers"
+      "[Protocol_version_header.negotiate]: Peer and us share no compatible versions"
       (us_versions   (2))
       (peer_versions (1))
       (protocol Krb)))

@@ -14,7 +14,7 @@ let%expect_test "test create results and also document the scenario where [creat
   test ~supported_versions:(List.init 99 ~f:Fn.id);
   let (_output_too_long : string) = [%expect.output] in
   (* too many supported versions *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     create_exn () ~protocol:Krb ~supported_versions:(List.init 100 ~f:Fn.id));
   [%expect
     {|
@@ -27,7 +27,7 @@ let%expect_test "test create results and also document the scenario where [creat
   test ~supported_versions:[ For_test.max_supported_version ];
   [%expect {| (4411474 1000000) |}];
   (* Supported version over the max supported version limit *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     create_exn () ~protocol:Krb ~supported_versions:[ For_test.max_supported_version + 1 ]);
   [%expect
     {|
@@ -36,7 +36,7 @@ let%expect_test "test create results and also document the scenario where [creat
      (supported_versions (1000001)))
     |}];
   (* [additional_magic_numbers] smaller than or equal to max supported version *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     create_exn () ~protocol:Krb ~additional_magic_numbers:[ 1 ] ~supported_versions:[]);
   [%expect
     {|
@@ -44,7 +44,7 @@ let%expect_test "test create results and also document the scenario where [creat
      (max_supported_version 1000000)
      (additional_magic_numbers (1)))
     |}];
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     create_exn
       ()
       ~protocol:Krb
@@ -57,7 +57,7 @@ let%expect_test "test create results and also document the scenario where [creat
      (additional_magic_numbers (1000000)))
     |}];
   (* [additional_magic_numbers] clashing with known protocols *)
-  require_does_raise [%here] (fun () ->
+  require_does_raise (fun () ->
     create_exn
       ()
       ~protocol:Krb

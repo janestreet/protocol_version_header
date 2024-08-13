@@ -13,7 +13,8 @@ depends: [
   "ocaml" {>= "5.1.0"}
   "core"
   "ppx_jane"
-  "dune"     {>= "3.11.0"}
+  "ppx_stable_witness"
+  "dune"               {>= "3.11.0"}
 ]
 available: arch != "arm32" & arch != "x86_32"
 synopsis: "Protocol versioning"

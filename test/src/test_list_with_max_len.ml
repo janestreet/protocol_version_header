@@ -2,9 +2,9 @@ open! Core
 
 module List_with_max_len_one =
 Protocol_version_header.For_test.Make_list_with_max_len (struct
-  let max_len = 1
-  let context = Info.of_string "Context"
-end)
+    let max_len = 1
+    let context = Info.of_string "Context"
+  end)
 
 let round_trips ~here lst =
   let serialized_with_regular_list =

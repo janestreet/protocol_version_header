@@ -12,7 +12,7 @@ open! Core
     authorization).
 *)
 
-type t [@@deriving bin_io, sexp]
+type t [@@deriving bin_io, sexp, stable_witness]
 
 (** [create_exn] raises if one of the following is true:
     - [List.length supported_versions + List.length additional_magic_numbers >= 100]
