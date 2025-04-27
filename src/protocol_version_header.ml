@@ -14,7 +14,17 @@ include struct
   open Stable_witness.Export
 
   type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
-  [@@deriving bin_io, sexp, stable_witness]
+  [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+
+  let[@zero_alloc opt] bin_read_t__local buf ~pos_ref = exclave_
+    (* We can assume this will not allocate, as [bin_read_list__local] will not allocate
+       as long as its argument doesn't, and [bin_read_int] doesn't allocate *)
+    (Bounded_list_in_case_someone_sends_garbage_on_the_wire.bin_read_t__local
+    [@zero_alloc assume])
+      bin_read_int
+      buf
+      ~pos_ref
+  ;;
 end
 
 let known_protocol_magic_numbers = lazy (Map.key_set Known_protocol.by_magic_number)

@@ -6,7 +6,10 @@ module type Config = sig
 end
 
 module type S = sig
-  type 'a t = private 'a list [@@deriving bin_io, sexp, stable_witness]
+  type 'a t = private 'a list
+  [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+
+  val bin_read_t__local : ('a, 'a t) Bin_prot.Read.reader1__local
 
   (** [of_list_exn l] raises if [List.length l] is larger than the supplied [max_len]. *)
   val of_list_exn : 'a list -> 'a t

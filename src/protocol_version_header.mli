@@ -9,10 +9,11 @@ open! Core
     header. A header can contain [additional_magic_numbers] that are not used in the
     version negotiation but can be used in some way by the peer (e.g. the kerberos rpc
     library could use this to indicate whether the server is doing any form of
-    authorization).
-*)
+    authorization). *)
 
-type t [@@deriving bin_io, sexp, stable_witness]
+type t [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+
+val bin_read_t__local : t Bin_prot.Read.reader__local [@@zero_alloc opt arity 2]
 
 (** [create_exn] raises if one of the following is true:
     - [List.length supported_versions + List.length additional_magic_numbers >= 100]
@@ -38,8 +39,8 @@ val negotiate : allow_legacy_peer:bool -> us:t -> peer:t -> int Or_error.t
     saying whether this magic number was observed. *)
 val contains_magic_prefix : protocol:Known_protocol.t -> bool Bin_prot.Type_class.reader
 
-(** [any_magic_prefix] and [any_magic_prefix_from_six_bytes] read the magic number for
-    one of the known protocols. They differ in how many bytes they read.
+(** [any_magic_prefix] and [any_magic_prefix_from_six_bytes] read the magic number for one
+    of the known protocols. They differ in how many bytes they read.
 
     [any_magic_prefix] reads the entire [Protocol_version_header.t] and then checks if
     there's any magic prefix in there. The number of bytes in the bin_io representation of
@@ -49,8 +50,7 @@ val contains_magic_prefix : protocol:Known_protocol.t -> bool Bin_prot.Type_clas
     [any_magic_prefix_from_six_bytes] reads exactly 6 bytes to check magic prefix.
 
     [any_magic_prefix_from_six_bytes_bin_size] is 6: the number of bytes that
-    [any_magic_prefix_from_six_bytes] reads.
-*)
+    [any_magic_prefix_from_six_bytes] reads. *)
 val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader
 
 (** See [any_magic_prefix] *)
