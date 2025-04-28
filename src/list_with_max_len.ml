@@ -5,12 +5,20 @@ module Make (Config : Config) = struct
   open Stable_witness.Export
   include Config
 
-  type 'a t = 'a list [@@deriving bin_shape, bin_write, stable_witness]
+  type 'a t = 'a list
+  [@@deriving bin_shape, bin_write ~localize, globalize, stable_witness]
 
   let __bin_read_t__ = List.__bin_read_t__
 
   let bin_read_t bin_read_el buf ~pos_ref =
     try Bin_prot.Read.bin_read_list_with_max_len ~max_len bin_read_el buf ~pos_ref with
+    | exn -> Exn.reraise exn (Info.to_string_hum context)
+  ;;
+
+  let bin_read_t__local bin_read_el buf ~pos_ref =
+    try
+      Bin_prot.Read.bin_read_list_with_max_len__local ~max_len bin_read_el buf ~pos_ref
+    with
     | exn -> Exn.reraise exn (Info.to_string_hum context)
   ;;
 
