@@ -88,4 +88,17 @@ module For_test : sig
   (** Max version that's possible to be supported ever. Any numbers bigger than this are
       considered metadata that's shared in the header. *)
   val max_supported_version : int
+
+  module Validated_for_fast_path : sig
+    type t =
+      { header : int iarray
+      ; protocol : Known_protocol.t
+      ; versions_start_index : int
+      }
+
+    val validate : int iarray -> local_ t or_null
+    val max_common_version : local_ t -> local_ t -> int or_null
+  end
+
+  val create_unvalidated : int list -> t
 end

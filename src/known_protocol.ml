@@ -4,7 +4,7 @@ type t =
   | Krb
   | Krb_test_mode
   | Rpc
-[@@deriving compare ~localize, enumerate, sexp, bin_io]
+[@@deriving compare ~localize, enumerate, sexp, bin_io, globalize]
 
 let magic_word = function
   | Krb -> "KRB2"

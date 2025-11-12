@@ -70,3 +70,21 @@ let%expect_test "test create results and also document the scenario where [creat
      (known_protocol_magic_numbers (4411474 5521995 843207243)))
     |}]
 ;;
+
+let%test_unit "create_exn produces values that pass Validated_for_fast_path.validate" =
+  Quickcheck.test
+    (Generators.header_generator ~min_versions:1 ~max_versions:50)
+    ~f:(fun (protocol, supported_versions, additional_magic_numbers) ->
+      let t = create_exn () ~protocol ~supported_versions ~additional_magic_numbers in
+      let iarray = Expert.raw_version_list t |> Iarray.of_list in
+      match For_test.Validated_for_fast_path.validate iarray with
+      | Or_null.This _ -> ()
+      | Or_null.Null ->
+        raise_s
+          [%message
+            "create_exn produced a value that failed Validated_for_fast_path.validate"
+              (protocol : Known_protocol.t)
+              (supported_versions : int list)
+              (additional_magic_numbers : int list)
+              (iarray : int iarray)])
+;;

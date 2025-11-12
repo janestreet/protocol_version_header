@@ -16,7 +16,7 @@ let round_trips ~here lst =
       serialized_with_regular_list
       ~pos_ref:(ref 0)
   in
-  [%test_eq: int list] ~here:[ here ] lst (final_list :> int list)
+  [%test_eq: int list] ~here:[ here ] lst (List_with_max_len_one.to_list final_list)
 ;;
 
 let%expect_test "we can read regular lists sent over the wire and fail when we are \
@@ -28,10 +28,5 @@ let%expect_test "we can read regular lists sent over the wire and fail when we a
   try round_trips ~here:[%here] [ 1; 2 ] with
   | exn ->
     print_s [%message (exn : Exn.t)];
-    [%expect
-      {|
-      (exn
-       (exn.ml.Reraised Context
-        (common.ml.Read_error "List_too_long / 2 (max 1)" 1)))
-      |}]
+    [%expect {| (exn ("Array is too large" (context Context) (len 2) (max_len 1))) |}]
 ;;
