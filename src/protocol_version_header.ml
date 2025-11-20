@@ -88,14 +88,14 @@ module Validated_for_fast_path = struct
             { protocol; versions_start_index; last_seen_version } ->
           if outside_max_supported_version_range item || item < last_seen_version
              (* Now that we've seen a valid version number, any subsequent invalid version
-               number means we can't be in the fast path (though this could still be a
-               valid protocol version header as long as it was some other magic number)
-               since our fast path assumes that all the version numbers are continguous in
-               memory.
+                number means we can't be in the fast path (though this could still be a
+                valid protocol version header as long as it was some other magic number)
+                since our fast path assumes that all the version numbers are continguous
+                in memory.
 
-               If this is a valid version number, but it's less than the previous version
-               number that we saw, then we know that the version numbers are not in
-               monotonic nondecreasing order, which also means we can't do the fast path.
+                If this is a valid version number, but it's less than the previous version
+                number that we saw, then we know that the version numbers are not in
+                monotonic nondecreasing order, which also means we can't do the fast path.
              *)
           then Invalid
           else
@@ -307,7 +307,7 @@ let magic_number_bin_size = 5
 module Magic_prefix_bin_repr = struct
   type t = int [@@deriving bin_shape, bin_write]
 
-  (* The bin prot representation of a protocol version header is the standard
+  (*=The bin prot representation of a protocol version header is the standard
      representation for an int list:
 
      | nat0 indicating size | element 0 | element 1 | ...
