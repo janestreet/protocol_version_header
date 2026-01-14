@@ -4,7 +4,7 @@ type t =
   | Krb
   | Krb_test_mode
   | Rpc
-[@@deriving compare ~localize, enumerate, sexp, bin_io]
+[@@deriving compare ~localize, enumerate, sexp, bin_io, globalize]
 
 let magic_word = function
   | Krb -> "KRB2"
@@ -20,8 +20,8 @@ let gen_magic_number word =
 let magic_number t = gen_magic_number (magic_word t)
 let by_magic_number = Int.Map.of_alist_exn (List.map all ~f:(fun p -> magic_number p, p))
 
-(* We once minted a new magic number for Krb in order to change the protocol
-   negotiation.  Let's be careful that we don't reuse the old magic number *)
+(* We once minted a new magic number for Krb in order to change the protocol negotiation.
+   Let's be careful that we don't reuse the old magic number *)
 let retired_krb_word = "KRB"
 
 (* Ensure tests break if the magic numbers are changed *)

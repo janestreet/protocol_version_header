@@ -4,7 +4,7 @@ type t =
   | Krb
   | Krb_test_mode
   | Rpc
-[@@deriving compare ~localize, enumerate, sexp]
+[@@deriving compare ~localize, enumerate, sexp, globalize]
 
 val magic_number : t -> int
 val by_magic_number : t Int.Map.t
