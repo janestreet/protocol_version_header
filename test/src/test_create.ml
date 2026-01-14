@@ -78,8 +78,8 @@ let%test_unit "create_exn produces values that pass Validated_for_fast_path.vali
       let t = create_exn () ~protocol ~supported_versions ~additional_magic_numbers in
       let iarray = Expert.raw_version_list t |> Iarray.of_list in
       match For_test.Validated_for_fast_path.validate iarray with
-      | Or_null.This _ -> ()
-      | Or_null.Null ->
+      | This _ -> ()
+      | Null ->
         raise_s
           [%message
             "create_exn produced a value that failed Validated_for_fast_path.validate"

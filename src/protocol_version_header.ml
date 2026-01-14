@@ -122,7 +122,9 @@ module Validated_for_fast_path = struct
       else (
         let us_version = us.header.:(us_idx) in
         let peer_version = peer.header.:(peer_idx) in
-        match Ordering.of_int ([%compare_local: int] us_version peer_version) with
+        match
+          Ordering.of_int (([%compare: int] [@mode local]) us_version peer_version)
+        with
         | Equal -> This us_version
         | Greater -> loop (us_idx - 1) peer_idx
         | Less -> loop us_idx (peer_idx - 1))
@@ -199,7 +201,7 @@ let negotiate ~allow_legacy_peer ~(us : t) ~(peer : t) =
         (Bounded_list_in_case_someone_sends_garbage_on_the_wire.to_iarray peer) )
   with
   | This us, This peer ->
-    if not ([%compare_local.equal: Known_protocol.t] us.protocol peer.protocol)
+    if not (([%compare.equal: Known_protocol.t] [@mode local]) us.protocol peer.protocol)
     then
       Or_error.error_s
         [%message
