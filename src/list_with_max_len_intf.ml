@@ -2,11 +2,11 @@ open! Core
 
 module type Config = sig
   val max_len : int
-  val context : Info.t
+  val context : Info.Portable.t
 end
 
 module type S = sig
-  type 'a t [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+  type 'a t [@@deriving bin_io ~localize ~portable, globalize, sexp, stable_witness]
 
   val bin_read_t__local : ('a, 'a t) Bin_prot.Read.reader1__local
 
