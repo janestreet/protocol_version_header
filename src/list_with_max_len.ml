@@ -7,7 +7,8 @@ module Make (Config : Config) = struct
 
   let max_len = Config.max_len
 
-  type 'a t = 'a iarray [@@deriving bin_write ~localize, globalize, stable_witness]
+  type 'a t = 'a iarray
+  [@@deriving bin_write ~localize ~portable, globalize, stable_witness]
 
   let __bin_read_t__ = Iarray.__bin_read_t__
 
@@ -23,7 +24,8 @@ module Make (Config : Config) = struct
     if len > max_len
     then
       raise_s
-        [%message "Array is too large" (context : Info.t) (len : int) (max_len : int)]
+        [%message
+          "Array is too large" (context : Info.Portable.t) (len : int) (max_len : int)]
     else Bin_prot.Read.bin_read_iarray bin_read_el buf ~pos_ref
   ;;
 
@@ -34,7 +36,8 @@ module Make (Config : Config) = struct
     if len > max_len
     then
       raise_s
-        [%message "Array is too large" (context : Info.t) (len : int) (max_len : int)]
+        [%message
+          "Array is too large" (context : Info.Portable.t) (len : int) (max_len : int)]
     else exclave_ Bin_prot.Read.bin_read_iarray__local bin_read_el buf ~pos_ref
   ;;
 
@@ -56,7 +59,8 @@ module Make (Config : Config) = struct
     if len > max_len
     then
       raise_s
-        [%message "List is too large" (context : Info.t) (len : int) (max_len : int)];
+        [%message
+          "List is too large" (context : Info.Portable.t) (len : int) (max_len : int)];
     Iarray.of_list l
   ;;
 

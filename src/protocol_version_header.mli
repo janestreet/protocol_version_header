@@ -1,3 +1,5 @@
+@@ portable
+
 open! Core
 
 (** This library offers a lightweight way for applications protocols to version
@@ -11,7 +13,7 @@ open! Core
     library could use this to indicate whether the server is doing any form of
     authorization). *)
 
-type t [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+type t : immutable_data [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
 
 val bin_read_t__local : t Bin_prot.Read.reader__local [@@zero_alloc opt arity 2]
 
@@ -33,7 +35,7 @@ val create_exn
 
     If [allow_legacy_peer] then the magic number of [peer] is assumed to be [us] if no
     magic number exists. *)
-val negotiate : allow_legacy_peer:bool -> us:t -> peer:t -> int Or_error.t
+val negotiate : allow_legacy_peer:bool -> us:t -> peer:t -> int Or_error.t @ portable
 
 (** [contains_magic_prefix] reads a bin_protted value of type [t] and returns a boolean
     saying whether this magic number was observed. *)
@@ -51,10 +53,12 @@ val contains_magic_prefix : protocol:Known_protocol.t -> bool Bin_prot.Type_clas
 
     [any_magic_prefix_from_six_bytes_bin_size] is 6: the number of bytes that
     [any_magic_prefix_from_six_bytes] reads. *)
-val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader
+val any_magic_prefix : Known_protocol.t option Bin_prot.Type_class.reader @@ nonportable
 
 (** See [any_magic_prefix] *)
-val any_magic_prefix_from_six_bytes : Known_protocol.t option Bin_prot.Type_class.reader
+val any_magic_prefix_from_six_bytes
+  : Known_protocol.t option Bin_prot.Type_class.reader
+  @@ nonportable
 
 (** See [any_magic_prefix] *)
 val any_magic_prefix_from_six_bytes_bin_size : int

@@ -1,12 +1,13 @@
 open! Core
 
-module type Config = sig
+module type Config = sig @@ portable
   val max_len : int
-  val context : Info.t
+  val context : Info.Portable.t
 end
 
-module type S = sig
-  type 'a t [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+module type S = sig @@ portable
+  type 'a t : immutable_data with 'a
+  [@@deriving bin_io ~localize ~portable, globalize, sexp, stable_witness]
 
   val bin_read_t__local : ('a, 'a t) Bin_prot.Read.reader1__local
 
@@ -19,7 +20,7 @@ module type S = sig
   val to_iarray : 'a t -> 'a iarray
 end
 
-module type List_with_max_len = sig
+module type List_with_max_len = sig @@ portable
   module type Config = Config
   module type S = S
 

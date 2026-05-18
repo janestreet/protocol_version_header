@@ -7,14 +7,14 @@ let outside_max_supported_version_range num = num > max_supported_version
 module Bounded_list_in_case_someone_sends_garbage_on_the_wire =
 List_with_max_len.Make (struct
     let max_len = 100
-    let context = Info.of_string "Protocol_version_header"
+    let context = Info.Portable.of_string "Protocol_version_header"
   end)
 
 include struct
   open Stable_witness.Export
 
   type t = int Bounded_list_in_case_someone_sends_garbage_on_the_wire.t
-  [@@deriving bin_io ~localize, globalize, sexp, stable_witness]
+  [@@deriving bin_io ~localize ~portable, globalize, sexp, stable_witness]
 
   let[@zero_alloc opt] bin_read_t__local buf ~pos_ref = exclave_
     (* We can assume this will not allocate, as [bin_read_list__local] will not allocate
@@ -133,7 +133,9 @@ module Validated_for_fast_path = struct
   ;;
 end
 
-let known_protocol_magic_numbers = lazy (Map.key_set Known_protocol.by_magic_number)
+let known_protocol_magic_numbers =
+  Portable_lazy.from_fun (fun () -> Map.key_set Known_protocol.by_magic_number)
+;;
 
 let create_exn ?(additional_magic_numbers = []) ~protocol ~supported_versions () =
   let protocol_magic_number = Known_protocol.magic_number protocol in
@@ -153,20 +155,21 @@ let create_exn ?(additional_magic_numbers = []) ~protocol ~supported_versions ()
           (additional_magic_numbers : int list)];
   if List.exists
        additional_magic_numbers
-       ~f:(Set.mem (force known_protocol_magic_numbers))
+       ~f:(Set.mem (Portable_lazy.force known_protocol_magic_numbers))
   then
     raise_s
       [%message
         "[additional_magic_numbers] shouldn't be overlapping with potential \
          [protocol_magic_number]s"
           (additional_magic_numbers : int list)
-          ~known_protocol_magic_numbers:(force known_protocol_magic_numbers : Int.Set.t)];
+          ~known_protocol_magic_numbers:
+            (Portable_lazy.force known_protocol_magic_numbers : Int.Set.t)];
   let supported_versions = List.dedup_and_sort supported_versions ~compare:Int.compare in
   protocol_magic_number :: (additional_magic_numbers @ supported_versions)
   |> Bounded_list_in_case_someone_sends_garbage_on_the_wire.of_list_exn
 ;;
 
-let get_protocol (t : t) = exclave_
+let get_protocol (t : t) @ portable = exclave_
   let protocols, versions =
     Iarray.Local.fold
       (Bounded_list_in_case_someone_sends_garbage_on_the_wire.to_iarray t)
@@ -228,61 +231,66 @@ let negotiate ~allow_legacy_peer ~(us : t) ~(peer : t) =
               (peer_versions : int iarray)
               (protocol : Known_protocol.t)])
   | _ ->
-    let open Or_error.Let_syntax in
-    let%bind us_protocol, us_versions =
-      get_protocol us |> [%globalize: (Known_protocol.t option * int list) Or_error.t]
-    in
-    let%bind peer_protocol, peer_versions =
-      get_protocol peer |> [%globalize: (Known_protocol.t option * int list) Or_error.t]
-    in
-    let%bind us_protocol =
-      match us_protocol with
-      | Some x -> return x
-      | None ->
-        error_s
-          [%message
-            "[Protocol_version_header.negotiate]: Could not determine our own protocol"
-              (us_versions : int list)]
-    in
-    let%bind peer_protocol =
-      match peer_protocol with
-      | Some x -> return x
-      | None ->
-        (* we assume peer is speaking our protocol if [allow_legacy_peer] *)
-        if allow_legacy_peer
-        then return us_protocol
-        else (
-          let peer_protocol = `Unknown in
-          Or_error.error_s
+    let res =
+      let open Or_error.Let_syntax in
+      let%bind us_protocol, us_versions =
+        get_protocol us |> [%globalize: (Known_protocol.t option * int list) Or_error.t]
+      in
+      let%bind peer_protocol, peer_versions =
+        get_protocol peer |> [%globalize: (Known_protocol.t option * int list) Or_error.t]
+      in
+      let%bind us_protocol =
+        match us_protocol with
+        | Some x -> return x
+        | None ->
+          error_s
             [%message
-              "[Protocol_version_header.negotiate]: Could not determine peer's protocol"
-                (us_protocol : Known_protocol.t)
-                (peer_protocol : [ `Unknown ])])
-    in
-    if not ([%compare.equal: Known_protocol.t] us_protocol peer_protocol)
-    then
-      Or_error.error_s
-        [%message
-          "[Protocol_version_header.negotiate]: Peer is using a different protocol from \
-           us"
-            (us_protocol : Known_protocol.t)
-            (peer_protocol : Known_protocol.t)]
-    else (
-      let protocol = us_protocol in
-      let peer_version_set = Hash_set.of_list (module Int) peer_versions in
-      match
-        List.filter us_versions ~f:(Hash_set.mem peer_version_set)
-        |> List.reduce ~f:Int.max
-      with
-      | Some version -> Ok version
-      | None ->
+              "[Protocol_version_header.negotiate]: Could not determine our own protocol"
+                (us_versions : int list)]
+      in
+      let%bind peer_protocol =
+        match peer_protocol with
+        | Some x -> return x
+        | None ->
+          (* we assume peer is speaking our protocol if [allow_legacy_peer] *)
+          if allow_legacy_peer
+          then return us_protocol
+          else (
+            let peer_protocol = `Unknown in
+            Or_error.error_s
+              [%message
+                "[Protocol_version_header.negotiate]: Could not determine peer's protocol"
+                  (us_protocol : Known_protocol.t)
+                  (peer_protocol : [ `Unknown ])])
+      in
+      if not ([%compare.equal: Known_protocol.t] us_protocol peer_protocol)
+      then
         Or_error.error_s
           [%message
-            "[Protocol_version_header.negotiate]: Peer and us share no compatible \
-             versions"
-              (us_versions : int list)
-              (peer_versions : int list)
-              (protocol : Known_protocol.t)])
+            "[Protocol_version_header.negotiate]: Peer is using a different protocol \
+             from us"
+              (us_protocol : Known_protocol.t)
+              (peer_protocol : Known_protocol.t)]
+      else (
+        let protocol = us_protocol in
+        let peer_version_set = Hash_set.of_list (module Int) peer_versions in
+        match
+          List.filter us_versions ~f:(Hash_set.mem peer_version_set)
+          |> List.reduce ~f:Int.max
+        with
+        | Some version -> Ok version
+        | None ->
+          Or_error.error_s
+            [%message
+              "[Protocol_version_header.negotiate]: Peer and us share no compatible \
+               versions"
+                (us_versions : int list)
+                (peer_versions : int list)
+                (protocol : Known_protocol.t)])
+    in
+    (match res with
+     | Ok version -> Ok version
+     | Error e -> Error (Error.portabilize e))
 ;;
 
 let matches_magic_prefix (t : t) ~protocol =
