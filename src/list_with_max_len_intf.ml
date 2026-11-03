@@ -16,7 +16,7 @@ module type S = sig @@ portable
 
   val max_len : int
   val to_list : 'a t -> 'a list
-  val fold : 'a t -> init:'b -> f:local_ ('b -> 'a -> 'b) -> 'b
+  val fold : 'a t -> init:'b -> f:('b -> 'a -> 'b) @ local -> 'b
   val to_iarray : 'a t -> 'a iarray
 end
 

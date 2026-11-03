@@ -37,23 +37,23 @@ let%expect_test "Test magic prefix reader" =
   test (Protocol_version_header.create_exn () ~protocol:Krb ~supported_versions:[]);
   [%expect
     {|
-    bytes written to the buffer: 6
-    any_magic_prefix -> known_protocol: Krb, bytes_read: 6
+    bytes written to the buffer: 11
+    any_magic_prefix -> known_protocol: Krb, bytes_read: 11
     any_magic_prefix_from_fixed_bytes -> known_protocol: Krb, bytes_read: 6
     |}];
   test (Protocol_version_header.create_exn () ~protocol:Krb ~supported_versions:[ 1 ]);
   [%expect
     {|
-    bytes written to the buffer: 7
-    any_magic_prefix -> known_protocol: Krb, bytes_read: 7
+    bytes written to the buffer: 12
+    any_magic_prefix -> known_protocol: Krb, bytes_read: 12
     any_magic_prefix_from_fixed_bytes -> known_protocol: Krb, bytes_read: 6
     |}];
   test
     (Protocol_version_header.create_exn () ~protocol:Rpc ~supported_versions:[ 1; 2; 3 ]);
   [%expect
     {|
-    bytes written to the buffer: 9
-    any_magic_prefix -> known_protocol: Rpc, bytes_read: 9
+    bytes written to the buffer: 14
+    any_magic_prefix -> known_protocol: Rpc, bytes_read: 14
     any_magic_prefix_from_fixed_bytes -> known_protocol: Rpc, bytes_read: 6
     |}]
 ;;
