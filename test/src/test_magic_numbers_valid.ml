@@ -2,8 +2,7 @@ open! Core
 open Protocol_version_header
 
 let magic_numbers =
-  force Known_protocol.For_test.all_magic_numbers_including_retired
-  @ Map.keys (force Krb_authorization_method.by_magic_number)
+  Reserved_magic_numbers.all @ Map.keys (force Krb_authorization_method.by_magic_number)
 ;;
 
 let%test_unit "validate magic numbers" =
@@ -30,6 +29,7 @@ let%expect_test "show the value of our magic numbers" =
     843207243
     5521995
     4411474
+    4674134
     43244093
     43437982
     |}]
